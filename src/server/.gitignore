@@ -1,0 +1,5 @@
+*.o
+pm_backend_fcgi
+.vimsession
+config.h
+Makefile

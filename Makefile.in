@@ -1,0 +1,35 @@
+@SET_MAKE@
+SUBDIRS = src 
+INSTALL = @INSTALL@
+
+sbindir		= @sbindir@
+etcdir		= @etcdir@
+startupdir	= @startupdir@
+mandir		= @mandir@
+
+all: 
+	@for subdir in $(SUBDIRS); do				\
+		$(MAKE) -C $$subdir || exit 1;			\
+	done
+
+test: 
+	@for subdir in $(SUBDIRS); do				\
+		$(MAKE) -C $$subdir test || exit 1;			\
+	done
+
+clean:
+	@for subdir in $(SUBDIRS); do				\
+		$(MAKE) -C $$subdir clean || exit 1;	\
+	done
+	@rm -f core
+
+depend:
+	@for subdir in $(SUBDIRS); do               \
+		$(MAKE) -C $$subdir depend || exit 1;    \
+	done
+	
+distclean:	clean
+	@rm -f config.cache config.status config.log src/config.h @OUTPUT_FILES@
+
+install:
+	$(INSTALL) -o root -g root -m 700 src/pm_backend_fcgi $(sbindir)/pm_backend_fcgi;

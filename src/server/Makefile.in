@@ -1,0 +1,39 @@
+CC = @CC@
+CPP = @CC@
+CFLAGS = -pthread @CFLAGS@
+LDFLAGS=@LDFLAGS@ -L/usr/lib64/mysql
+LIBS = @LIBS@ -lstdc++ -lfcgi++ -lfcgi -ldl -lpthread  -lstdc++ -lmysqlclient -lgearman -lxml2
+TEST_LIBS = @TEST_LIBS@
+AR=@AR@ cr
+RANLIB=@RANLIB@
+INCLUDES=-I.. -I/usr/include/mysql -I/usr/include/libxml2
+OUTDIR=@top_srcdir@/@OUTPATH@
+OBJS= fcgi_server.o fcgi_handler.o wp_handler.o sitemap_handler.o worker.o json.o
+TEST_OBJS= 
+PROG=wp_frontend
+
+.PHONY: all test start clean depend
+
+all: $(PROG)
+
+test: $(PROG)
+	@echo "Running tests"
+	@./$(TEST)
+	
+$(PROG): main.o $(OBJS) ../logger/logger.a
+	@echo "Linking $@"
+	$(CPP) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LIBS)
+
+clean:
+	rm -f $(PROG) main.o $(OBJS) $(TEST_OBJS)
+
+depend:
+	
+
+%.o: %.cpp
+	$(CPP) $(CFLAGS) $(INCLUDES) -c -o $(basename $<).o $<
+
+%.o: %.c
+	@echo "Compiling $<"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c -o $(basename $<).o $<
+

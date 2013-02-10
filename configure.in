@@ -1,0 +1,96 @@
+# Process this file with autoconf to produce a configure script.
+AC_INIT(wp-frontend,0.0.1-1)
+AC_CONFIG_HEADER(src/server/config.h)
+AC_CONFIG_AUX_DIR(config)
+
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_RANLIB
+AC_CHECK_PROG(AR,ar,ar,:)
+
+AC_LANG([C])
+
+AC_CHECK_LIB([socket], [bind])
+AC_CHECK_LIB([pthread], [pthread_create])
+AC_CHECK_LIB([dl], [dlopen])
+
+AC_LANG([C++])
+
+AC_CHECK_LIB([fcgi], [FCGX_Init], [LIBS="-lfcgi++ $LIBS"])
+
+SUBDIRS="logger server"
+
+dnl autoconf defaults CXX to 'g++', so its unclear whether it exists/works
+AC_MSG_CHECKING([whether $CXX works])
+AC_TRY_COMPILE([#include <iostream>],
+               [std::cout << "ok";],
+               [AC_MSG_RESULT(yes)
+                LIBS="-lstdc++ $LIBS"
+
+                AC_MSG_CHECKING([for cppunit])
+                AC_TRY_COMPILE([#include <cppunit/ui/text/TestRunner.h>
+                                #include <cppunit/TestFixture.h>],
+                               [CppUnit::TextUi::TestRunner runner; printf("ok");],
+                               [AC_MSG_RESULT(yes)
+                                TEST_LIBS="-lcppunit $TEST_LIBS"],
+                               [AC_MSG_RESULT(no)])
+               ],
+               [AC_MSG_RESULT(no)])
+
+CFLAGS="-Os"
+
+OUTPATH="bin"
+
+INSTALL="./config/install-sh -c"
+
+sbindir="/usr/sbin"
+etcdir="/etc"
+startupdir="/etc/rc.d/init.d"
+mandir="/usr/share/man"
+
+if test ! -d "$OUTPATH"; then
+	echo "creating the output directory $OUTPATH"
+	mkdir "$OUTPATH"
+fi
+
+# Check for command-line stuff
+AC_ARG_ENABLE(enable_release,
+	[  --enable-release        configure sources for release (default: no)])
+
+if test "$enable_release" = "yes"; then
+	CFLAGS="$CFLAGS -O3 -Wall -s"
+	BUILD_MODE="release"
+else
+	CFLAGS="-O0 -g -Wall -DDEBUG"
+	BUILD_MODE="debug"
+fi
+
+OUTPUT_FILES="Makefile src/Makefile"
+
+AC_PROG_MAKE_SET
+AC_SUBST(CFLAGS)
+AC_SUBST(LIBS)
+AC_SUBST(TEST_LIBS)
+AC_SUBST(SUBDIRS)
+AC_SUBST(OUTPATH)
+AC_SUBST(INSTALL)
+AC_SUBST(OUTPUT_FILES)
+AC_SUBST(sbindir)
+AC_SUBST(etcdir)
+AC_SUBST(startupdir)
+AC_SUBST(mandir)
+AC_SUBST(VERSION)
+AC_SUBST(RELEASE)
+
+AC_OUTPUT([
+			Makefile
+			src/Makefile
+			src/logger/Makefile
+			src/server/Makefile
+		  ] )
+		 
+echo 
+echo avapp build mode is: $BUILD_MODE
+echo 
