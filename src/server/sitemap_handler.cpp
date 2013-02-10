@@ -93,6 +93,8 @@ void sitemap_handler::add_url(XMLDoc &doc, const std::string &loc, const std::st
 
 void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
 {
+    LogInfo("sitemap_handler::handle");
+
     try {
         DBConnHolder conn(pool);
 
@@ -249,7 +251,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
         _response.fcgi_out << doc;
     }
     catch(const db_exception &e) {
-        LogError("wp_handler::handle DB error: " <<  e.what());
+        LogError("sitemap_handler::handle DB error: " <<  e.what());
         return_error(_response, e.what());
     }
 }
