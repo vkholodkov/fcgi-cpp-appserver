@@ -32,4 +32,4 @@ distclean:	clean
 	@rm -f config.cache config.status config.log src/config.h @OUTPUT_FILES@
 
 install:
-	$(INSTALL) -o root -g root -m 700 src/pm_backend_fcgi $(sbindir)/pm_backend_fcgi;
+	$(INSTALL) -o root -g root -m 700 src/wp_frontend $(sbindir)/wp_frontend;

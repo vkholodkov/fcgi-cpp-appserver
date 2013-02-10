@@ -7,7 +7,7 @@ Logger theLog;
 
 Logger::Logger()
 {
-    openlog("pm_backend_fcgi", LOG_NDELAY, LOG_DAEMON);
+    openlog("wp_frontend", LOG_NDELAY, LOG_DAEMON);
 }
 
 Logger::~Logger()

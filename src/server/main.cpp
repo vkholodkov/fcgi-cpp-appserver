@@ -5,10 +5,10 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <getopt.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <logger/logger.h>
-
-#include "submit_handler.h"
 
 #include "fcgi_server.h"
 
@@ -149,7 +149,7 @@ int main(int argc,char *argv[])
     pid_t               pid;
     bool                daemon = true;
     MainProcess         main_process;
-    const char          *conf_file_path = "pm_backend.conf";
+    const char          *conf_file_path = "wp_frontend.conf";
 
     while(1) {
         this_option_optind = optind ? optind : 1;
