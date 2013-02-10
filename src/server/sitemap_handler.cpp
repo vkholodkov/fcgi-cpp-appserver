@@ -101,7 +101,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
 
         XMLDoc doc("urlset", "http://www.sitemaps.org/schemas/sitemap/0.9", "1.0");
 
-//        doc.add_pi("xml-stylesheet", "type=\"text/xsl\" href=\"wp-content/plugins/google-sitemap-plugin/sitemap.xsl\"");
+        doc.add_pi("xml-stylesheet", "type=\"text/xsl\" href=\"wp-content/plugins/google-sitemap-plugin/sitemap.xsl\"");
 
         {
             /*
