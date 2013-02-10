@@ -1,3 +1,5 @@
 Debug
 Release
 ReadMe.txt
+db_pool.o
+db_pool.a

@@ -20,7 +20,7 @@ AC_LANG([C++])
 
 AC_CHECK_LIB([fcgi], [FCGX_Init], [LIBS="-lfcgi++ $LIBS"])
 
-SUBDIRS="logger server"
+SUBDIRS="logger db server"
 
 dnl autoconf defaults CXX to 'g++', so its unclear whether it exists/works
 AC_MSG_CHECKING([whether $CXX works])
@@ -88,6 +88,7 @@ AC_OUTPUT([
 			Makefile
 			src/Makefile
 			src/logger/Makefile
+			src/db/Makefile
 			src/server/Makefile
 		  ] )
 		 

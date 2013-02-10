@@ -20,7 +20,7 @@ test: $(PROG)
 	@echo "Running tests"
 	@./$(TEST)
 	
-$(PROG): main.o $(OBJS) ../logger/logger.a
+$(PROG): main.o $(OBJS) ../logger/logger.a ../db/db_pool.a
 	@echo "Linking $@"
 	$(CPP) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LIBS)
 

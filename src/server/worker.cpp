@@ -70,6 +70,8 @@ int worker_process()
 
     DBPool pool(DBCred("localhost", "vkholodkov_blog", "vkholodkov_blog", "vkholodkov_blog"), 5, 40);
 
+    DBPool::start_maintenance_thread(pool);
+
     try{
         fcgi_server s(":9002");
 
@@ -98,6 +100,8 @@ int worker_process()
         LogInfo("worker caught unknown exception");
         return 1;
     }
+
+    DBPool::join_maintenance_thread();
 
     LogInfo("worker process exited");
 

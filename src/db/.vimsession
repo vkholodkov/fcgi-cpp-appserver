@@ -39,9 +39,9 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +0 db_pool.h
-args db_pool.h
-edit db_pool.h
+badd +0 db_pool.cpp
+args db_pool.cpp
+edit db_pool.cpp
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -149,12 +149,12 @@ set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 180 - ((0 * winheight(0) + 26) / 53)
+let s:l = 29 - ((28 * winheight(0) + 26) / 53)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-180
-normal! 05l
+29
+normal! 047l
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

@@ -1,0 +1,35 @@
+AR = @AR@
+CC = @CC@
+CPP = @CC@
+CFLAGS = -pthread @CFLAGS@
+LDFLAGS=@LDFLAGS@
+LIBS = @LIBS@ -lstdc++ -lpthread
+TEST_LIBS = @TEST_LIBS@
+AR=@AR@ cr
+RANLIB=@RANLIB@
+INCLUDES=-I.. -I/usr/include/mysql
+OUTDIR=@top_srcdir@/@OUTPATH@
+OBJS=db_pool.o
+ARCHIVE=db_pool.a
+
+.PHONY: all test start clean depend
+
+all: $(ARCHIVE)
+	
+$(ARCHIVE): $(OBJS)
+	@echo "Linking $@"
+	$(AR) $@ $^
+
+clean:
+	rm -f $(ARCHIVE) $(OBJS)
+
+depend:
+	
+
+%.o: %.cpp
+	$(CPP) $(CFLAGS) $(INCLUDES) -c -o $(basename $<).o $<
+
+%.o: %.c
+	@echo "Compiling $<"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c -o $(basename $<).o $<
+

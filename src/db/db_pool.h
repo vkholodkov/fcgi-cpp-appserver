@@ -80,6 +80,8 @@ public:
 			throw db_exception(&m_handler);
 		}
 
+        time(&m_last_used);
+
         LogSQL("connection established");
 	}
 
@@ -90,6 +92,7 @@ public:
 	}
 
 	MYSQL			m_handler;
+    time_t          m_last_used;
 };
 
 typedef struct {
@@ -503,6 +506,8 @@ public:
             m_available_connections.pop_front();
         }
 
+        time(&conn.get()->m_last_used);
+
         pthread_mutex_unlock(&m_lock);
 
         LogSQL("get connection " << conn.get());
@@ -515,10 +520,18 @@ public:
 
         pthread_mutex_lock(&m_lock);
         m_available_connections.push_back(conn);
+        time(&conn->m_last_used);
         pthread_cond_signal(&m_not_empty);
         pthread_mutex_unlock(&m_lock);
     }
 
+    static void start_maintenance_thread(DBPool&);
+    static void join_maintenance_thread();
+
+private:
+    static void *maintenance_thread_func(void*);
+
+private:
     pthread_mutex_t     m_lock;
     pthread_cond_t      m_not_empty;
 
@@ -530,6 +543,13 @@ public:
     size_t              m_max_connections;
     size_t              m_num_connections;
     size_t              m_num_available;
+
+    static              std::list<DBPool*> pools;
+    static              pthread_t maintenance_thread;
+    static              pthread_mutex_t startup_lock;
+    static              pthread_mutex_t maintenance_lock;
+    static volatile     bool maintenance_thread_running;
+    static volatile     bool maintenance_thread_exiting;
 };
 
 class DBConnHolder {
