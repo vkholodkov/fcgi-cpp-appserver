@@ -489,7 +489,7 @@ public:
 
         pthread_mutex_lock(&m_lock);
 
-        if(m_num_available == m_num_connections && m_num_connections < m_max_connections) {
+        if(m_num_available == 0 && m_num_connections < m_max_connections) {
             /*
              * If there is room to grow connections then do it
              */
@@ -511,13 +511,13 @@ public:
 
         pthread_mutex_unlock(&m_lock);
 
-        LogSQL("get connection " << conn.get());
+        LogSQL("get connection " << conn.get() << " (" << m_num_available << '/' << m_num_connections << ')');
 
         return conn.release();
     }
 
     void put(DBConn *conn) {
-        LogSQL("put connection " << conn);
+        LogSQL("put connection " << conn << " (" << m_num_available << '/' << m_num_connections << ')');
 
         pthread_mutex_lock(&m_lock);
         m_available_connections.push_back(conn);
