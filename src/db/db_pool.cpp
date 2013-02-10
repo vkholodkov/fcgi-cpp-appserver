@@ -30,9 +30,12 @@ void *DBPool::maintenance_thread_func(void *arg) {
                 if((now - (*i)->m_last_used) >= 60) {
                     to_remove.reset(*i);
                     (*p)->m_available_connections.erase(i);
+                    (*p)->m_num_connections--;
+                    (*p)->m_num_available--;
                     break;
                 }
             }
+
             pthread_mutex_unlock(&(*p)->m_lock);
         }
 

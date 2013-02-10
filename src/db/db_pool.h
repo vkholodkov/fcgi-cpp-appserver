@@ -504,6 +504,7 @@ public:
 
             conn.reset(m_available_connections.front());
             m_available_connections.pop_front();
+            m_num_available--;
         }
 
         time(&conn.get()->m_last_used);
@@ -520,6 +521,7 @@ public:
 
         pthread_mutex_lock(&m_lock);
         m_available_connections.push_back(conn);
+        m_num_available++;
         time(&conn->m_last_used);
         pthread_cond_signal(&m_not_empty);
         pthread_mutex_unlock(&m_lock);
