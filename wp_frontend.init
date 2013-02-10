@@ -1,0 +1,82 @@
+#!/bin/bash
+#
+# wp_frontend        Startup script for the  Wordpress Frontend
+#
+# chkconfig: - 85 15
+# description: Wordpress Frontend is a custom frontend for Wordpress
+# processname: wp_frontend
+# config: <none>
+# pidfile: /var/run/wp_frontend.pid
+#
+### BEGIN INIT INFO
+# Provides: wp_frontend
+# Required-Start: $local_fs $network gearman
+# Required-Stop: $local_fs $network
+# Default-Start:
+# Default-Stop:
+# Short-Description: start and stop the Gearman server
+# Description: Gearman is a distributed job system.
+### END INIT INFO
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+if [ -f /etc/sysconfig/wp_frontend ]; then
+        . /etc/sysconfig/wp_frontend
+fi
+
+[ -z "${PIDFILE}" ] && pidfile="/var/run/wp_frontend.pid"
+[ -z "${LOCKFILE}" ] && lockfile="/var/lock/subsys/wp_frontend"
+
+wp_frontend=/usr/sbin/wp_frontend_fcgi
+prog=wp_frontend
+
+RETVAL=0
+
+start() {
+        echo -n $"Starting $prog: "
+        ulimit -c unlimited
+        $wp_frontend
+        RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && (touch $lockfile; pgrep -f $wp_frontend > $pidfile)
+        return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $prog: "
+	killproc -p $pidfile $wp_frontend
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && rm -f $lockfile $pidfile
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+        status -p $pidfile $wp_frontend
+	RETVAL=$?
+	;;
+  restart|reload)
+	stop
+	start
+	;;
+  condrestart|try-restart)
+	if status -p $pidfile $wp_frontend >&/dev/null; then
+		stop
+		start
+	fi
+	;;
+  *)
+	echo $"Usage: $prog {start|stop|restart|reload|condrestart|status|help}"
+	RETVAL=3
+esac
+
+exit $RETVAL
+
