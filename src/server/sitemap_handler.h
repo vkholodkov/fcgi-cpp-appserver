@@ -29,6 +29,7 @@ private:
     void return_error(fcgi_response&, const std::string&, int status = 200) const;
 
     static std::string get_base_url(DBConn&);
+    size_t get_num_posts_per_page(DBConn&);
     static void add_url(XMLDoc&, const std::string&, const std::string&, const std::string&, double);
 
     DBPool &pool;

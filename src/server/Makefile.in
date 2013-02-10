@@ -1,6 +1,6 @@
 CC = @CC@
 CPP = @CC@
-CFLAGS = -pthread @CFLAGS@
+CFLAGS = -pthread @CFLAGS@ -DSQLDEBUG
 LDFLAGS=@LDFLAGS@ -L/usr/lib64/mysql
 LIBS = @LIBS@ -lstdc++ -lfcgi++ -lfcgi -ldl -lpthread  -lstdc++ -lmysqlclient -lgearman -lxml2
 TEST_LIBS = @TEST_LIBS@
