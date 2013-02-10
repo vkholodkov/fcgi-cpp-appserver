@@ -32,4 +32,5 @@ distclean:	clean
 	@rm -f config.cache config.status config.log src/config.h @OUTPUT_FILES@
 
 install:
-	$(INSTALL) -o root -g root -m 700 src/wp_frontend $(sbindir)/wp_frontend;
+	$(INSTALL) -o root -g root -m 700 src/server/wp_frontend $(sbindir)/wp_frontend;
+	$(INSTALL) -o root -g root -m 700 wp_frontend.init $(startupdir)/wp_frontend;
