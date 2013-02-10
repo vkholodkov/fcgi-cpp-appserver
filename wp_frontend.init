@@ -28,7 +28,7 @@ fi
 [ -z "${PIDFILE}" ] && pidfile="/var/run/wp_frontend.pid"
 [ -z "${LOCKFILE}" ] && lockfile="/var/lock/subsys/wp_frontend"
 
-wp_frontend=/usr/sbin/wp_frontend_fcgi
+wp_frontend=/usr/sbin/wp_frontend
 prog=wp_frontend
 
 RETVAL=0
