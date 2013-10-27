@@ -68,17 +68,23 @@ int worker_process()
     new_action.sa_flags = 0;
     sigaction(SIGQUIT, &new_action, NULL);
 
-    DBPool pool(DBCred("localhost", "vkholodkov_blog", "vkholodkov_blog", "vkholodkov_blog"), 5, 40);
+    DBPool pool_vkholodkov_blog(DBCred("localhost", "vkholodkov_blog", "vkholodkov_blog", "vkholodkov_blog"), 5, 40);
+    DBPool pool_wp_com(DBCred("localhost", "wp_com", "wp_com", "wp_com"), 5, 40);
 
-    DBPool::start_maintenance_thread(pool);
+    DBPool::start_maintenance_thread(pool_vkholodkov_blog);
+    DBPool::start_maintenance_thread(pool_wp_com);
 
     try{
         fcgi_server s(":9002");
 
         drop_permissions();
 
-        std::auto_ptr<fcgi_handler> wp_handler_ptr(new wp_handler(pool));
-        std::auto_ptr<fcgi_handler> sitemap_handler_ptr(new sitemap_handler(pool));
+        std::auto_ptr<fcgi_handler> wp_handler_ptr(new wp_handler(pool_vkholodkov_blog));
+        std::auto_ptr<sitemap_handler> sitemap_handler_ptr(new sitemap_handler());
+
+        sitemap_handler_ptr->add_site("www.nginxguts.com", pool_vkholodkov_blog);
+        sitemap_handler_ptr->add_site("www.weddingpastry.com", pool_wp_com);
+        sitemap_handler_ptr->add_site("dev.weddingpastry.com", pool_wp_com);
 
         s.add_handler_mapping("/", wp_handler_ptr.get());
         s.add_handler_mapping("/sitemap.xml", sitemap_handler_ptr.get());

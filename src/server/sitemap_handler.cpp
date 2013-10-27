@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <cmath>
+#include <vector>
 
 #include <openssl/sha.h>
 
@@ -15,8 +16,7 @@
 
 namespace fp {
 
-sitemap_handler::sitemap_handler(DBPool &_pool)
-    : pool(_pool)
+sitemap_handler::sitemap_handler()
 {
 }
 
@@ -95,15 +95,46 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
 {
     LogInfo("sitemap_handler::handle");
 
+    std::string hostname(_request.get_fcgi_param("SERVER_NAME"));
+
+    PoolContainer::const_iterator site = sites.find(hostname);
+
+    if(site == sites.end()) {
+        LogError("sitemap_handler::handle site not found: " << hostname);
+        return return_error(_response, "site not found: " + hostname);
+    }
+
+    std::vector<std::string> post_types;
+
+    post_types.push_back("post");
+
+    if(hostname != "www.nginxguts.com") {
+        post_types.push_back("place");
+        post_types.push_back("event");
+    }
+
+    std::vector<std::string> taxonomy_types;
+
+    taxonomy_types.push_back("category");
+
+    if(hostname != "www.nginxguts.com") {
+        taxonomy_types.push_back("placecategory");
+    }
+
     try {
-        DBConnHolder conn(pool);
+        DBConnHolder conn(*site->second);
 
         std::string base_url(get_base_url(conn.get()));
         size_t num_posts_per_page = get_num_posts_per_page(conn.get());
 
         XMLDoc doc("urlset", "http://www.sitemaps.org/schemas/sitemap/0.9", "1.0");
 
-        doc.add_pi("xml-stylesheet", "type=\"text/xsl\" href=\"wp-content/plugins/google-sitemap-plugin/sitemap.xsl\"");
+        if(hostname == "www.nginxguts.com") {
+            doc.add_pi("xml-stylesheet", "type=\"text/xsl\" href=\"wp-content/plugins/google-sitemap-plugin/sitemap.xsl\"");
+        }
+        else {
+            doc.add_pi("xml-stylesheet", "type=\"text/xsl\" href=\"wp-content/uploads/sitemap.xsl\"");
+        }
 
         {
             /*
@@ -126,12 +157,14 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
             }
         }
 
-        {
+        for(std::vector<std::string>::const_iterator i = post_types.begin() ; i != post_types.end() ; i++) {
             /*
              * Add post URLs
              */
             DBStmt stmt(conn.get(), "select post_name, post_modified_gmt, post_date_gmt from wp_posts where post_status='publish' "
-                " and post_type='post' order by post_date_gmt");
+                " and post_type=? order by post_date_gmt");
+
+            stmt.bindString(0, *i);
             
             stmt.execute();
 
@@ -140,7 +173,12 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
                 std::string dt(stmt.asString(2));
                 std::string modified_dt(stmt.asString(1));
 
-                url << base_url << '/' << dt.substr(0, 4) << '/' << dt.substr(5, 2) << '/' << stmt.asString(0) << '/';
+                if(hostname != "www.nginxguts.com") {
+                    url << base_url << "/wedding-cakes/" << stmt.asString(0) << '/';
+                }
+                else {
+                    url << base_url << '/' << dt.substr(0, 4) << '/' << dt.substr(5, 2) << '/' << stmt.asString(0) << '/';
+                }
 
                 modified_dt[10] = 'T';
 
@@ -148,14 +186,16 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
             }
         }
 
-        {
-            std::string taxonomy("category");
+        for(std::vector<std::string>::const_iterator i = taxonomy_types.begin() ; i != taxonomy_types.end() ; i++) {
+            std::string taxonomy(*i);
             /*
              * Add category URLs
              */
             DBStmt stmt(conn.get(), "select slug, max(p.post_modified_gmt), count(distinct p.ID) from wp_terms ts, wp_term_taxonomy tt, wp_term_relationships tr, wp_posts p"
-                 " where tt.taxonomy='" + taxonomy + "' and tt.term_id=ts.term_id and tt.parent=0 and tt.count!=0 and "
-                 " tt.term_taxonomy_id = tr.term_taxonomy_id and tr.object_id=p.ID and p.post_status='publish' and p.post_type='post' group by slug");
+                 " where tt.taxonomy=? and tt.term_id=ts.term_id and tt.parent=0 and tt.count!=0 and "
+                 " tt.term_taxonomy_id = tr.term_taxonomy_id and tr.object_id=p.ID and p.post_status='publish' group by slug");
+
+            stmt.bindString(0, taxonomy);
             
             stmt.execute();
 
@@ -165,7 +205,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
                 unsigned num_posts = stmt.asInt(2);
                 unsigned page = 0;
 
-                url << base_url << '/' << taxonomy << '/' << stmt.asString(0) << '/';
+                url << base_url << '/' << (taxonomy == "placecategory" ? "weddingcakes" : taxonomy) << '/' << stmt.asString(0) << '/';
 
                 modified_dt[10] = 'T';
 
@@ -180,14 +220,14 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
                         page_str << "page/" << (page + 1) << '/';
                         add_url(doc, url.str() + page_str.str(), modified_dt+"+00:00", "daily", 1.0);
 
-                        num_posts -= num_posts_per_page;
+                        num_posts = (num_posts > num_posts_per_page) ? num_posts - num_posts_per_page : 0;
                         page++;
-                    } while((num_posts % num_posts_per_page) == num_posts_per_page);
+                    } while(num_posts != 0);
                 }
             }
         }
 
-        {
+        if(hostname == "www.nginxguts.com") {
             /*
              * Add author URLs
              */
@@ -229,7 +269,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
 
                 add_url(doc, url.str(), modified_dt+"+00:00", "daily", 1.0);
 
-                if(num_posts > num_posts_per_page) {
+                if(hostname == "www.nginxguts.com" && num_posts > num_posts_per_page) {
                     num_posts -= num_posts_per_page;
                     page++;
 
