@@ -140,14 +140,14 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
             /*
              * Add page URLs
              */
-            DBStmt stmt(conn.get(), "select post_name, post_modified_gmt from wp_posts where post_status='publish' "
+            DBStmt stmt(conn.get(), "select post_name, post_modified_gmt, post_date_gmt from wp_posts where post_status='publish' "
                 " and post_type='page' order by post_date_gmt");
             
             stmt.execute();
 
             while(stmt.fetch()) {
                 std::ostringstream url;
-                std::string modified_dt(stmt.asString(1));
+                std::string modified_dt(stmt.asString(1) != "0000-00-00 00:00:00" ? stmt.asString(1) : stmt.asString(2));
 
                 url << base_url << '/' << stmt.asString(0) << '/';
 
@@ -171,7 +171,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
             while(stmt.fetch()) {
                 std::ostringstream url;
                 std::string dt(stmt.asString(2));
-                std::string modified_dt(stmt.asString(1));
+                std::string modified_dt(stmt.asString(1) != "0000-00-00 00:00:00" ? stmt.asString(1) : stmt.asString(2));
 
                 if(hostname != "www.nginxguts.com") {
                     url << base_url << "/wedding-cakes/" << stmt.asString(0) << '/';
@@ -182,7 +182,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
 
                 modified_dt[10] = 'T';
 
-                add_url(doc, url.str(), modified_dt + "+00:00", "monthly", 1.0);
+                add_url(doc, url.str(), modified_dt + "+00:00", hostname != "www.nginxguts.com" ? "weekly" : "monthly", 1.0);
             }
         }
 
@@ -282,6 +282,28 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
                         page++;
                     } while((num_posts % num_posts_per_page) == num_posts_per_page);
                 }
+            }
+        }
+
+        {
+            /*
+             * Add images URL
+             */
+            DBStmt stmt(conn.get(), "select p.post_name, p.post_modified_gmt, p.post_date_gmt, m.meta_value path from wp_posts p, wp_postmeta m "
+                " where p.ID=m.post_id and p.post_type='attachment' and m.meta_key='_wp_attached_file' order by p.post_date_gmt");
+            
+            stmt.execute();
+
+            while(stmt.fetch()) {
+                std::ostringstream url;
+                std::string modified_dt(stmt.asString(1) != "0000-00-00 00:00:00" ? stmt.asString(1) : stmt.asString(2));
+                std::string path(stmt.asString(3));
+
+                url << base_url << (path[0] == '/' ? path : "/wp-content/uploads/" + path);
+
+                modified_dt[10] = 'T';
+
+                add_url(doc, url.str(), modified_dt + "+00:00", "monthly", 1.0);
             }
         }
 
