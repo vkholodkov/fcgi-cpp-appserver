@@ -285,6 +285,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
             }
         }
 
+#if 0
         {
             /*
              * Add images URL
@@ -306,6 +307,7 @@ void sitemap_handler::handle(fcgi_request &_request, fcgi_response &_response)
                 add_url(doc, url.str(), modified_dt + "+00:00", "monthly", 1.0);
             }
         }
+#endif
 
         _response.fcgi_out << "Status: 200\r\n";
         _response.fcgi_out << "Content-Type: application/xml\r\n";
