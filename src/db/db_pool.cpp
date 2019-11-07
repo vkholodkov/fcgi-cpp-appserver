@@ -1,4 +1,6 @@
 
+#include <unistd.h>
+
 #include <db/db_pool.h>
 
 std::list<DBPool*> DBPool::pools;

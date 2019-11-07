@@ -1,4 +1,5 @@
 
+#include <unistd.h>
 #include <signal.h>
 #include <memory>
 #include <sys/types.h>
@@ -27,8 +28,8 @@ void drop_permissions()
     }
 
     if(nobody == NULL) {
-        std::cout << "no nobody or www-data user in /etc/passwd" << std::endl;
-        return -1;
+        LogInfo("no nobody or www-data user in /etc/passwd");
+        return;
     }
 
     nogroup = getgrnam("www-data");
@@ -38,8 +39,8 @@ void drop_permissions()
     }
 
     if(nobody == NULL) {
-        std::cout << "no nogroup or www-data user in /etc/group" << std::endl;
-        return -1;
+        LogInfo("no nogroup or www-data user in /etc/group");
+        return;
     }
 
     setsid();
