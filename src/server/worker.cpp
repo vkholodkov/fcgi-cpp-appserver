@@ -83,8 +83,6 @@ int worker_process()
         std::auto_ptr<sitemap_handler> sitemap_handler_ptr(new sitemap_handler());
 
         sitemap_handler_ptr->add_site("www.nginxguts.com", pool_vkholodkov_blog);
-        sitemap_handler_ptr->add_site("www.weddingpastry.com", pool_wp_com);
-        sitemap_handler_ptr->add_site("dev.weddingpastry.com", pool_wp_com);
 
         s.add_handler_mapping("/", wp_handler_ptr.get());
         s.add_handler_mapping("/sitemap.xml", sitemap_handler_ptr.get());
