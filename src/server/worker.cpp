@@ -20,8 +20,7 @@ void drop_permissions()
     struct passwd *nobody;
     struct group *nogroup;
 
-#if 0
-    nobody = getpwnam("awww-data");
+    nobody = getpwnam("www-data");
 
     if(nobody == NULL) {
         nobody = getpwnam("nobody");
@@ -32,7 +31,7 @@ void drop_permissions()
         return -1;
     }
 
-    nogroup = getgrnam("awww-data");
+    nogroup = getgrnam("www-data");
 
     if(nogroup == NULL) {
         nogroup = getgrnam("nogroup");
@@ -47,7 +46,6 @@ void drop_permissions()
 
     setuid(nobody->pw_uid);
     setgid(nogroup->gr_gid);
-#endif
 
     close(0); close(1); close(2);
 
@@ -68,10 +66,8 @@ int worker_process()
     new_action.sa_flags = 0;
     sigaction(SIGQUIT, &new_action, NULL);
 
-    DBPool pool_vkholodkov_blog(DBCred("localhost", "vkholodkov_blog", "vkholodkov_blog", "vkholodkov_blog"), 5, 40);
     DBPool pool_wp_com(DBCred("localhost", "wp_com", "wp_com", "wp_com"), 5, 40);
 
-    DBPool::start_maintenance_thread(pool_vkholodkov_blog);
     DBPool::start_maintenance_thread(pool_wp_com);
 
     try{
@@ -79,10 +75,10 @@ int worker_process()
 
         drop_permissions();
 
-        std::auto_ptr<fcgi_handler> wp_handler_ptr(new wp_handler(pool_vkholodkov_blog));
+        std::auto_ptr<fcgi_handler> wp_handler_ptr(new wp_handler(pool_wp_com));
         std::auto_ptr<sitemap_handler> sitemap_handler_ptr(new sitemap_handler());
 
-        sitemap_handler_ptr->add_site("www.nginxguts.com", pool_vkholodkov_blog);
+        sitemap_handler_ptr->add_site("wordpress.example.com", pool_wp_com);
 
         s.add_handler_mapping("/", wp_handler_ptr.get());
         s.add_handler_mapping("/sitemap.xml", sitemap_handler_ptr.get());
